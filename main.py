@@ -8,7 +8,7 @@ import time
 # LOAD SYMBOL LIST
 # ---------------------------
 print("Loading symbols...")
-df = pd.read_csv("stocks.csv")
+df = pd.read_csv("ind_nifty200list.csv")
 symbols = (df["SYMBOL"] + ".NS").tolist()
 total = len(symbols)
 print("Total symbols:", total)
