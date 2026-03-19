@@ -12,6 +12,45 @@ st.set_page_config(page_title="RS Screener Dashboard", layout="wide")
 st.title("📊 RS Screener — Multi-Timeframe Strength Analyzer")
 st.caption("Daily RS = 65 bars | Weekly RS = 13 weeks | Monthly RS = 3 months (TradingView-exact)")
 
+# --- SECURITY & UI CONFIG ---
+hide_st_style = '''
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+    .stDeployButton, [data-testid="stAppDeployButton"] {display: none !important;}
+    .stGithubButton, [data-testid="stToolbarActionButton"] {display: none !important;}
+</style>
+'''
+st.markdown(hide_st_style, unsafe_allow_html=True)
+import hmac
+
+if "password_correct" not in st.session_state:
+    st.session_state.password_correct = False
+
+def login_page():
+    if not st.secrets.get("password"):
+        st.error("Secrets not configured. Please set password in Streamlit Cloud Advanced Settings.")
+        return
+
+    st.markdown("""
+        <h1 style='text-align: center; margin-top: 50px;'>🔐 Secure Access</h1>
+    """, unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        with st.form("login_form"):
+            password = st.text_input("Password", type="password", key="login_password")
+            submit = st.form_submit_button("Login", use_container_width=True)
+        if submit:
+             if password == str(st.secrets.get("password", "")):
+                 st.session_state.password_correct = True
+                 st.rerun()
+             else:
+                 st.error("❌ Incorrect password")
+
+if not st.session_state.password_correct:
+    login_page()
+    st.stop()
+# -----------------------------
 
 # =====================================================
 # LOAD CSV DATA (cached)
