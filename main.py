@@ -1,7 +1,6 @@
 import pandas as pd
 import yfinance as yf
 import numpy as np
-import requests
 import time
 
 # ---------------------------
@@ -13,32 +12,16 @@ symbols = (df["Symbol"] + ".NS").tolist()
 total = len(symbols)
 print("Total symbols:", total)
 
-# ---------------------------
-# NSE SESSION (FAST)
-# ---------------------------
-session = requests.Session()
-session.headers.update({
-    "User-Agent": "Mozilla/5.0",
-    "Referer": "https://www.nseindia.com/"
-})
-
 def get_fundamentals_fast(symbol):
     """
-    Extremely fast fundamentals:
-    - Sector from NSE API
-    - Shares Outstanding → compute MarketCap manually
+    Get sector and market cap from yfinance.
+    NSE /api/quote-equity returns 403, so yfinance is the reliable source.
     """
-    short = symbol.replace(".NS", "")
-
     try:
-        url = f"https://www.nseindia.com/api/quote-equity?symbol={short}"
-        data = session.get(url).json()
-
-        sector = data["industryInfo"].get("industry")
-        shares = data["securityInfo"].get("issuedSize")  # shares outstanding
-
-        return sector, shares
-
+        info = yf.Ticker(symbol).info
+        sector = info.get("sector") or info.get("industry")
+        market_cap = info.get("marketCap")
+        return sector, market_cap
     except:
         return None, None
 
@@ -98,14 +81,8 @@ def process_batch(batch):
 
             last = stock.iloc[-1]
 
-            # FAST FUNDAMENTALS
-            mcap, sector = get_fundamentals_fast(sym)
-
-            sector, shares = get_fundamentals_fast(sym)
-            if shares:
-                mcap = last["Close"] * shares
-            else:
-                mcap = None
+            # FUNDAMENTALS (yfinance — NSE quote API returns 403)
+            sector, mcap = get_fundamentals_fast(sym)
 
 
             results.append({
