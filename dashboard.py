@@ -70,7 +70,7 @@ filtered_display.index.name = "#"
 # DISPLAY — FILTERED STOCKS
 # =====================================================
 with st.expander("📌 Filtered Stocks (After Conditions)"):
-    st.dataframe(filtered_display, use_container_width=True)
+    st.dataframe(filtered_display, width="stretch")
 
 
 
@@ -85,9 +85,10 @@ df_bull = raw_df[raw_df["RS"] > 0].copy()
 # Weight = MarketCapCr
 df_bull["Weight"] = df_bull["MarketCapCr"]
 
-sector_rs = df_bull.groupby("Sector").apply(
-    lambda x: (x["RS"] * x["Weight"]).sum() / x["Weight"].sum()
-).reset_index(name="Weighted_RS")
+df_bull["WeightedContrib"] = df_bull["RS"] * df_bull["Weight"]
+_agg = df_bull.groupby("Sector").agg({"WeightedContrib": "sum", "Weight": "sum"})
+_agg["Weighted_RS"] = _agg["WeightedContrib"] / _agg["Weight"]
+sector_rs = _agg[["Weighted_RS"]].reset_index()
 
 # Sort in descending order
 sector_rs = sector_rs.sort_values("Weighted_RS", ascending=False)
@@ -97,7 +98,7 @@ sector_rs = sector_rs.reset_index(drop=True)
 sector_rs.index = sector_rs.index + 1
 sector_rs.index.name = "#"
 
-st.dataframe(sector_rs, use_container_width=True, hide_index=False)
+st.dataframe(sector_rs, width="stretch", hide_index=False)
 
 
 # =====================================================
@@ -242,7 +243,7 @@ if compute_btn:
                 "RS_Daily", "RS_Weekly", "RS_Month",
                 "Score"
             ]],
-            use_container_width=True
+            width="stretch"
         )
 
         st.session_state["rs_table"] = rs_df
@@ -259,7 +260,7 @@ if "rs_table" in st.session_state and rs_df is None:
             "RS_Daily", "RS_Weekly", "RS_Month",
             "Score"
         ]],
-        use_container_width=True
+        width="stretch"
     )
 
 
@@ -314,7 +315,7 @@ if symbol_list:
         decreasing_line_color="#EF5350"
     ))
     fig.update_layout(height=450, xaxis_rangeslider_visible=True)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # MULTI RS METRICS
     if rs_df is not None:
